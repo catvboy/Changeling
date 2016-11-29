@@ -42,7 +42,6 @@ import mchorse.metamorph.api.attacks.WitherAttack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.monster.EntitySkeleton;
-import net.minecraft.entity.monster.SkeletonType;
 
 /**
  * Morph manager class
@@ -171,9 +170,7 @@ public class MorphManager
     {
         if (entity instanceof EntitySkeleton)
         {
-            SkeletonType skeleton = ((EntitySkeleton) entity).func_189771_df();
-
-            if (skeleton.equals(SkeletonType.WITHER))
+            if (((EntitySkeleton) entity).getSkeletonType() == 1)
             {
                 return "WitherSkeleton";
             }
