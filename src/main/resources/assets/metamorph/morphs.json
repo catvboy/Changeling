@@ -31,9 +31,6 @@
     "Pig": {
         "health": 10
     },
-    "PolarBear": {
-        "health": 30
-    },
     "Rabbit": {
         "abilities": ["prevent_fall"],
         "action": "jump",
