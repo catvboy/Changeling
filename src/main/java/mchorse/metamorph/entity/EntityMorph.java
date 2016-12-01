@@ -48,6 +48,7 @@ public class EntityMorph extends EntityLiving implements IEntityAdditionalSpawnD
         super(worldIn);
 
         this.setEntityInvulnerable(true);
+        this.setCustomNameTag("Morph");
     }
 
     public EntityMorph(World worldIn, UUID owner, String morph)
