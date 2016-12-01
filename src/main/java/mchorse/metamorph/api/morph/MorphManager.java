@@ -43,6 +43,8 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.monster.EntitySkeleton;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Morph manager class
@@ -167,6 +169,7 @@ public class MorphManager
      * the name of the morph based on the given entity (in the future with 
      * introduction of the public API).
      */
+    @SideOnly(Side.CLIENT)
     public String morphNameFromEntity(Entity entity)
     {
         if (entity instanceof EntitySkeleton)
