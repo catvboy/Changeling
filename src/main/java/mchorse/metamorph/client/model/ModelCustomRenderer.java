@@ -2,15 +2,18 @@ package mchorse.metamorph.client.model;
 
 import org.lwjgl.opengl.GL11;
 
-import mchorse.metamorph.api.Model;
+import mchorse.metamorph.api.models.Model;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Custom model renderer class
  *
  * This class extended only for purpose of storing more
  */
+@SideOnly(Side.CLIENT)
 public class ModelCustomRenderer extends ModelRenderer
 {
     public Model.Limb limb;
@@ -73,10 +76,20 @@ public class ModelCustomRenderer extends ModelRenderer
     public void render(float scale)
     {
         GL11.glPushMatrix();
+
+        if (this.scaleY != 1)
+        {
+            GL11.glTranslatef(0.0F, this.rotationPointY * scale, 0.0F);
+        }
+
         GL11.glScalef(this.scaleX, this.scaleY, this.scaleZ);
 
-        super.render(scale);
+        if (this.scaleY != 1)
+        {
+            GL11.glTranslatef(0.0F, -this.rotationPointY * scale, 0.0F);
+        }
 
+        super.render(scale);
         GL11.glPopMatrix();
     }
 
@@ -88,7 +101,17 @@ public class ModelCustomRenderer extends ModelRenderer
             this.parent.postRender(scale);
         }
 
+        if (this.scaleY != 1)
+        {
+            GL11.glTranslatef(0.0F, this.rotationPointY * scale, 0.0F);
+        }
+
         GL11.glScalef(this.scaleX, this.scaleY, this.scaleZ);
+
+        if (this.scaleY != 1)
+        {
+            GL11.glTranslatef(0.0F, -this.rotationPointY * scale, 0.0F);
+        }
 
         super.postRender(scale);
     }

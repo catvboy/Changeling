@@ -3,12 +3,11 @@ package mchorse.metamorph.client.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import mchorse.metamorph.api.Model;
-import net.minecraft.client.model.ModelBase;
+import mchorse.metamorph.api.models.Model;
+import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -21,8 +20,15 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * been loaded from config folder or from server and also render a custom model
  * itself.
  */
+/**
+ * Custom Model class
+ *
+ * This class is responsible for managing available custom models that have
+ * been loaded from config folder or from server and also render a custom model
+ * itself.
+ */
 @SideOnly(Side.CLIENT)
-public class ModelCustom extends ModelBase
+public class ModelCustom extends ModelBiped
 {
     /**
      * Repository of custom models that are available for usage
@@ -98,10 +104,25 @@ public class ModelCustom extends ModelBase
 
             if (limb.limb.swinging)
             {
-                float f = 0.8F;
-                float f2 = mirror ^ invert ? 1 : 0;
+                boolean flag = entityIn instanceof EntityLivingBase && ((EntityLivingBase) entityIn).getTicksElytraFlying() > 4;
+                float f = 1.0F;
 
-                limb.rotateAngleX += MathHelper.cos(limbSwing * 0.6662F + PI * f2) * 2.0F * limbSwingAmount * 0.5F / f;
+                if (flag)
+                {
+                    f = (float) (entityIn.motionX * entityIn.motionX + entityIn.motionY * entityIn.motionY + entityIn.motionZ * entityIn.motionZ);
+                    f = f / 0.2F;
+                    f = f * f * f;
+                }
+
+                if (f < 1.0F)
+                {
+                    f = 1.0F;
+                }
+
+                float f2 = mirror ^ invert ? 1 : 0;
+                float f3 = limb.limb.holding.isEmpty() ? 1.4F : 1.0F;
+
+                limb.rotateAngleX += MathHelper.cos(limbSwing * 0.6662F + PI * f2) * f3 * limbSwingAmount / f;
             }
 
             if (limb.limb.idle)
@@ -122,19 +143,54 @@ public class ModelCustom extends ModelBase
                 float sinSwing = MathHelper.sin(swing * PI);
                 float sinSwing2 = MathHelper.sin(this.swingProgress * PI) * -(0.0F - 0.7F) * 0.75F;
 
-                limb.rotateAngleX = limb.rotateAngleX - (sinSwing * 1.2F + sinSwing2);
-                limb.rotateAngleY += bodyY * 2.0F;
-                limb.rotateAngleZ += MathHelper.sin(this.swingProgress * PI) * -0.4F;
+                if (limb.limb.size[0] > limb.limb.size[1])
+                {
+                    limb.rotateAngleY = limb.rotateAngleX - (sinSwing * 1.2F + sinSwing2);
+                    limb.rotateAngleX += bodyY * 2.0F;
+                    limb.rotateAngleZ += MathHelper.sin(this.swingProgress * PI) * -0.4F;
+                }
+                else
+                {
+                    limb.rotateAngleX = limb.rotateAngleX - (sinSwing * 1.2F + sinSwing2);
+                    limb.rotateAngleY += bodyY * 2.0F;
+                    limb.rotateAngleZ += MathHelper.sin(this.swingProgress * PI) * -0.4F;
+                }
             }
 
-            if (!limb.limb.holding.isEmpty())
+            if (!limb.limb.holding.isEmpty() && limb.limb.parent.isEmpty())
             {
-                EntityLivingBase entity = (EntityLivingBase) entityIn;
-                ItemStack stack = limb.limb.holding.equals("right") ? entity.getHeldItemMainhand() : entity.getHeldItemOffhand();
+                boolean right = limb.limb.holding.equals("right");
+                ModelBiped.ArmPose pose = right ? this.rightArmPose : this.leftArmPose;
+                ModelBiped.ArmPose opposite = right ? this.leftArmPose : this.rightArmPose;
 
-                if (stack != null)
+                switch (pose)
                 {
-                    limb.rotateAngleX = limb.rotateAngleX * 0.5F - PI / 10F;
+                    case BLOCK:
+                        limb.rotateAngleX = limb.rotateAngleX * 0.5F - 0.9424779F;
+                        limb.rotateAngleY = 0.5235988F * (right ? -1 : 1);
+                        break;
+
+                    case ITEM:
+                        limb.rotateAngleX = limb.rotateAngleX * 0.5F - PI / 10F;
+                        break;
+                }
+
+                float rotateAngleX = headPitch * 0.017453292F;
+                float rotateAngleY = netHeadYaw * 0.017453292F;
+
+                if (right && pose == ModelBiped.ArmPose.BOW_AND_ARROW)
+                {
+                    limb.rotateAngleY = -0.1F + rotateAngleY - 0.4F;
+                    limb.rotateAngleY = 0.1F + rotateAngleY;
+                    limb.rotateAngleX = -((float) Math.PI / 2F) + rotateAngleX;
+                    limb.rotateAngleX = -((float) Math.PI / 2F) + rotateAngleX;
+                }
+                else if (!right && opposite == ModelBiped.ArmPose.BOW_AND_ARROW)
+                {
+                    limb.rotateAngleY = -0.1F + rotateAngleY;
+                    limb.rotateAngleY = 0.1F + rotateAngleY + 0.4F;
+                    limb.rotateAngleX = -((float) Math.PI / 2F) + rotateAngleX;
+                    limb.rotateAngleX = -((float) Math.PI / 2F) + rotateAngleX;
                 }
             }
         }
@@ -143,7 +199,7 @@ public class ModelCustom extends ModelBase
     /**
      * Apply transform from current pose on given limb
      */
-    protected void applyLimbPose(ModelCustomRenderer limb)
+    public void applyLimbPose(ModelCustomRenderer limb)
     {
         limb.applyTransform(this.pose.limbs.get(limb.limb.name));
     }

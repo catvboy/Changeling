@@ -1,5 +1,7 @@
 package mchorse.metamorph.network.client;
 
+import mchorse.metamorph.ClientProxy;
+import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
 import mchorse.metamorph.network.common.PacketAcquiredMorphs;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -12,6 +14,11 @@ public class ClientHandlerAcquiredMorphs extends ClientMessageHandler<PacketAcqu
     @SideOnly(Side.CLIENT)
     public void run(EntityPlayerSP player, PacketAcquiredMorphs message)
     {
-        Morphing.get(player).setAcquiredMorphs(message.morphs);
+        IMorphing morphing = Morphing.get(player);
+
+        morphing.setAcquiredMorphs(message.morphs);
+        morphing.setFavorites(message.favorites);
+
+        ClientProxy.overlay.setupMorphs(morphing);
     }
 }

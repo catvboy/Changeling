@@ -2,7 +2,7 @@ package mchorse.metamorph.capabilities.morphing;
 
 import java.util.List;
 
-import mchorse.metamorph.api.morph.Morph;
+import mchorse.metamorph.api.morphs.AbstractMorph;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
@@ -14,39 +14,34 @@ import net.minecraft.entity.player.EntityPlayer;
 public interface IMorphing
 {
     /**
-     * Add a morphing 
+     * Add a morph
      */
-    public boolean acquireMorph(String name);
+    public boolean acquireMorph(AbstractMorph morph);
 
     /**
      * Check if this capability has acquired a morph
      */
-    public boolean acquiredMorph(String name);
+    public boolean acquiredMorph(AbstractMorph morph);
 
     /**
-     * Get all acquired morphings
+     * Get all acquired morph
      */
-    public List<String> getAcquiredMorphs();
+    public List<AbstractMorph> getAcquiredMorphs();
 
     /**
-     * Set acquired morphings
+     * Set acquired morph
      */
-    public void setAcquiredMorphs(List<String> morphs);
+    public void setAcquiredMorphs(List<AbstractMorph> morphs);
 
     /**
      * Get current morph 
      */
-    public Morph getCurrentMorph();
+    public AbstractMorph getCurrentMorph();
 
     /**
-     * Get current morph's name 
+     * Set current morph
      */
-    public String getCurrentMorphName();
-
-    /**
-     * Set morph
-     */
-    public void setCurrentMorph(String name, EntityPlayer player, boolean force);
+    public boolean setCurrentMorph(AbstractMorph morph, EntityPlayer player, boolean force);
 
     /**
      * Demorph this capability 
@@ -57,6 +52,29 @@ public interface IMorphing
      * Is this capability is morphed at all 
      */
     public boolean isMorphed();
+
+    /**
+     * Favorite or unfavorite a morph by given index
+     * 
+     * @return if true then given favorite was added, or false if it was 
+     *         removed
+     */
+    public boolean favorite(int index);
+
+    /**
+     * Get indices of all favorite morphs 
+     */
+    public List<Integer> getFavorites();
+
+    /**
+     * Set list of integer indices 
+     */
+    public void setFavorites(List<Integer> favorites);
+
+    /**
+     * Remove a morph at given index
+     */
+    public boolean remove(int index);
 
     /**
      * Copy data from other morph 

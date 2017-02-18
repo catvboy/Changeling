@@ -1,10 +1,10 @@
 package mchorse.metamorph.capabilities.morphing;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import mchorse.metamorph.api.morph.Morph;
-import mchorse.metamorph.api.morph.MorphManager;
+import mchorse.metamorph.api.morphs.AbstractMorph;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
@@ -15,10 +15,20 @@ import net.minecraft.entity.player.EntityPlayer;
  */
 public class Morphing implements IMorphing
 {
-    private List<String> acquiredMorphs = new ArrayList<String>();
+    /**
+     * List of acquired abstract morphs 
+     */
+    private List<AbstractMorph> acquiredMorphs = new ArrayList<AbstractMorph>();
 
-    private Morph morph;
-    private String name = "";
+    /**
+     * List of favorite morphs 
+     */
+    private List<Integer> favorites = new ArrayList<Integer>();
+
+    /**
+     * Current used morph
+     */
+    private AbstractMorph morph;
 
     public static IMorphing get(EntityPlayer player)
     {
@@ -26,78 +36,81 @@ public class Morphing implements IMorphing
     }
 
     @Override
-    public boolean acquireMorph(String name)
+    public boolean acquireMorph(AbstractMorph morph)
     {
-        Morph morph = MorphManager.INSTANCE.morphs.get(name);
-
-        if (morph == null || this.acquiredMorph(name))
+        if (morph == null || this.acquiredMorph(morph))
         {
             return false;
         }
 
-        this.acquiredMorphs.add(name);
+        this.acquiredMorphs.add(morph);
 
         return true;
     }
 
     @Override
-    public boolean acquiredMorph(String name)
+    public boolean acquiredMorph(AbstractMorph morph)
     {
-        return this.acquiredMorphs.contains(name);
+        for (AbstractMorph acquired : this.acquiredMorphs)
+        {
+            if (acquired.equals(morph))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
-    public List<String> getAcquiredMorphs()
+    public List<AbstractMorph> getAcquiredMorphs()
     {
         return acquiredMorphs;
     }
 
     @Override
-    public void setAcquiredMorphs(List<String> morphs)
+    public void setAcquiredMorphs(List<AbstractMorph> morphs)
     {
         this.acquiredMorphs.clear();
         this.acquiredMorphs.addAll(morphs);
     }
 
     @Override
-    public Morph getCurrentMorph()
+    public AbstractMorph getCurrentMorph()
     {
         return this.morph;
     }
 
     @Override
-    public String getCurrentMorphName()
+    public boolean setCurrentMorph(AbstractMorph morph, EntityPlayer player, boolean force)
     {
-        return this.name;
-    }
-
-    @Override
-    public void setCurrentMorph(String name, EntityPlayer player, boolean force)
-    {
-        if (name.isEmpty())
+        if (morph == null)
         {
             this.demorph(player);
 
-            return;
+            return true;
         }
 
         boolean creative = player != null ? player.isCreative() : false;
 
-        if (force || creative || this.acquiredMorphs.contains(name))
+        if (force || creative || this.acquiredMorph(morph))
         {
             if (player != null && this.morph != null)
             {
                 this.morph.demorph(player);
             }
 
-            this.morph = MorphManager.INSTANCE.morphs.get(name);
-            this.name = name;
+            this.morph = morph;
 
             if (player != null)
             {
                 this.morph.morph(player);
             }
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
@@ -109,7 +122,6 @@ public class Morphing implements IMorphing
         }
 
         this.morph = null;
-        this.name = "";
     }
 
     @Override
@@ -119,9 +131,76 @@ public class Morphing implements IMorphing
     }
 
     @Override
+    public boolean favorite(int index)
+    {
+        int favorite = this.favorites.indexOf(index);
+
+        if (favorite == -1)
+        {
+            this.favorites.add(index);
+
+            return true;
+        }
+        else
+        {
+            this.favorites.remove(favorite);
+        }
+
+        return false;
+    }
+
+    @Override
+    public List<Integer> getFavorites()
+    {
+        return this.favorites;
+    }
+
+    @Override
+    public void setFavorites(List<Integer> favorites)
+    {
+        this.favorites.clear();
+        this.favorites.addAll(favorites);
+    }
+
+    @Override
+    public boolean remove(int index)
+    {
+        if (!this.acquiredMorphs.isEmpty() && index >= 0 && index < this.acquiredMorphs.size())
+        {
+            Iterator<Integer> favorites = this.favorites.iterator();
+            int i = 0;
+
+            this.acquiredMorphs.remove(index);
+
+            while (favorites.hasNext())
+            {
+                int favorite = favorites.next().intValue();
+
+                if (favorite == index)
+                {
+                    favorites.remove();
+
+                    i--;
+                }
+                else if (favorite > index)
+                {
+                    this.favorites.set(i, favorite - 1);
+                }
+
+                i++;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
     public void copy(IMorphing morphing, EntityPlayer player)
     {
         this.acquiredMorphs = morphing.getAcquiredMorphs();
-        this.setCurrentMorph(morphing.getCurrentMorphName(), player, true);
+        this.setCurrentMorph(morphing.getCurrentMorph(), player, true);
+        this.setFavorites(morphing.getFavorites());
     }
 }

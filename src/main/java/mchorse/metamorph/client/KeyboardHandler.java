@@ -4,8 +4,9 @@ import org.lwjgl.input.Keyboard;
 
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
-import mchorse.metamorph.client.gui.GuiMenu;
-import mchorse.metamorph.client.gui.GuiMorphs;
+import mchorse.metamorph.client.gui.GuiCreativeMenu;
+import mchorse.metamorph.client.gui.GuiSurvivalMenu;
+import mchorse.metamorph.client.gui.elements.GuiSurvivalMorphs;
 import mchorse.metamorph.network.Dispatcher;
 import mchorse.metamorph.network.common.PacketAction;
 import mchorse.metamorph.network.common.PacketSelectMorph;
@@ -28,38 +29,50 @@ public class KeyboardHandler
 {
     /* Action key */
     private KeyBinding keyAction;
-    private KeyBinding keyMenu;
+    private KeyBinding keyCreativeMenu;
+    private KeyBinding keySurvivalMenu;
 
     /* Morph related keys */
-    private KeyBinding keyNextMorph;
-    private KeyBinding keyPrevMorph;
-    private KeyBinding keySelectMorph;
-    private KeyBinding keyDemorph;
+    public KeyBinding keyNextMorph;
+    public KeyBinding keyPrevMorph;
+    public KeyBinding keyNextVarMorph;
+    public KeyBinding keyPrevVarMorph;
+    public KeyBinding keySelectMorph;
+    public KeyBinding keyDemorph;
 
-    private GuiMenu overlay;
+    /* Survival morphing menu */
+    private GuiSurvivalMorphs overlay;
 
     public KeyboardHandler()
     {
         String category = "key.metamorph";
 
+        /* Create key bindings */
         keyAction = new KeyBinding("key.metamorph.action", Keyboard.KEY_V, category);
-        keyMenu = new KeyBinding("key.metamorph.menu", Keyboard.KEY_B, category);
+        keyCreativeMenu = new KeyBinding("key.metamorph.creative_menu", Keyboard.KEY_B, category);
+        keySurvivalMenu = new KeyBinding("key.metamorph.survival_menu", Keyboard.KEY_N, category);
 
         keyNextMorph = new KeyBinding("key.metamorph.morph.next", Keyboard.KEY_RBRACKET, category);
         keyPrevMorph = new KeyBinding("key.metamorph.morph.prev", Keyboard.KEY_LBRACKET, category);
+        keyNextVarMorph = new KeyBinding("key.metamorph.morph.next_var", Keyboard.KEY_BACKSLASH, category);
+        keyPrevVarMorph = new KeyBinding("key.metamorph.morph.prev_var", Keyboard.KEY_APOSTROPHE, category);
         keySelectMorph = new KeyBinding("key.metamorph.morph.select", Keyboard.KEY_RETURN, category);
         keyDemorph = new KeyBinding("key.metamorph.morph.demorph", Keyboard.KEY_PERIOD, category);
 
+        /* Register them in the client registry */
         ClientRegistry.registerKeyBinding(keyAction);
-        ClientRegistry.registerKeyBinding(keyMenu);
+        ClientRegistry.registerKeyBinding(keyCreativeMenu);
+        ClientRegistry.registerKeyBinding(keySurvivalMenu);
 
         ClientRegistry.registerKeyBinding(keyNextMorph);
         ClientRegistry.registerKeyBinding(keyPrevMorph);
+        ClientRegistry.registerKeyBinding(keyNextVarMorph);
+        ClientRegistry.registerKeyBinding(keyPrevVarMorph);
         ClientRegistry.registerKeyBinding(keySelectMorph);
         ClientRegistry.registerKeyBinding(keyDemorph);
     }
 
-    public KeyboardHandler(GuiMenu overlay)
+    public KeyboardHandler(GuiSurvivalMorphs overlay)
     {
         this();
         this.overlay = overlay;
@@ -84,9 +97,14 @@ public class KeyboardHandler
             }
         }
 
-        if (keyMenu.isPressed() && mc.thePlayer.isCreative())
+        if (keyCreativeMenu.isPressed() && mc.thePlayer.isCreative())
         {
-            mc.displayGuiScreen(new GuiMorphs());
+            mc.displayGuiScreen(new GuiCreativeMenu());
+        }
+
+        if (keySurvivalMenu.isPressed())
+        {
+            mc.displayGuiScreen(new GuiSurvivalMenu(this.overlay));
         }
 
         boolean prev = keyPrevMorph.isPressed();
@@ -111,11 +129,19 @@ public class KeyboardHandler
             }
         }
 
+        if (keyNextVarMorph.isPressed())
+        {
+            this.overlay.up();
+        }
+        else if (keyPrevVarMorph.isPressed())
+        {
+            this.overlay.down();
+        }
+
         /* Apply selected morph */
         if (keySelectMorph.isPressed())
         {
-            Dispatcher.sendToServer(new PacketSelectMorph(this.overlay.index));
-            this.overlay.timer = 0;
+            this.overlay.selectCurrent();
         }
 
         /* Demorph from current morph */

@@ -3,11 +3,12 @@ package mchorse.metamorph.capabilities.morphing;
 import java.util.ArrayList;
 import java.util.List;
 
-import mchorse.metamorph.api.morph.MorphManager;
+import mchorse.metamorph.api.MorphManager;
+import mchorse.metamorph.api.morphs.AbstractMorph;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
@@ -27,15 +28,31 @@ public class MorphingStorage implements IStorage<IMorphing>
     public NBTBase writeNBT(Capability<IMorphing> capability, IMorphing instance, EnumFacing side)
     {
         NBTTagCompound tag = new NBTTagCompound();
-        NBTTagList list = new NBTTagList();
-        String morph = MorphManager.INSTANCE.fromMorph(instance.getCurrentMorph());
+        NBTTagList acquired = new NBTTagList();
+        NBTTagList favorites = new NBTTagList();
 
-        tag.setString("Morph", morph);
-        tag.setTag("Morphs", list);
-
-        for (String acquiredMorph : instance.getAcquiredMorphs())
+        if (instance.getCurrentMorph() != null)
         {
-            list.appendTag(new NBTTagString(acquiredMorph));
+            NBTTagCompound morph = new NBTTagCompound();
+            instance.getCurrentMorph().toNBT(morph);
+
+            tag.setTag("Morph", morph);
+        }
+
+        tag.setTag("Morphs", acquired);
+        tag.setTag("Favorites", favorites);
+
+        for (AbstractMorph acquiredMorph : instance.getAcquiredMorphs())
+        {
+            NBTTagCompound acquiredTag = new NBTTagCompound();
+
+            acquiredMorph.toNBT(acquiredTag);
+            acquired.appendTag(acquiredTag);
+        }
+
+        for (Integer index : instance.getFavorites())
+        {
+            favorites.appendTag(new NBTTagInt(index.intValue()));
         }
 
         return tag;
@@ -47,23 +64,44 @@ public class MorphingStorage implements IStorage<IMorphing>
         if (nbt instanceof NBTTagCompound)
         {
             NBTTagCompound tag = (NBTTagCompound) nbt;
-            NBTTagList list = (NBTTagList) tag.getTag("Morphs");
+            NBTTagList acquired = tag.getTagList("Morphs", 10);
+            NBTTagList favorites = tag.getTagList("Favorites", 3);
+            NBTTagCompound morphTag = tag.getCompoundTag("Morph");
 
-            instance.setCurrentMorph(tag.getString("Morph"), null, true);
-
-            if (list == null)
+            if (!tag.hasNoTags())
             {
-                return;
+                instance.setCurrentMorph(MorphManager.INSTANCE.morphFromNBT(morphTag), null, true);
             }
 
-            List<String> acquiredMorphs = new ArrayList<String>();
-
-            for (int i = 0; i < list.tagCount(); i++)
+            if (!acquired.hasNoTags())
             {
-                acquiredMorphs.add(list.getStringTagAt(i));
+                List<AbstractMorph> acquiredMorphs = new ArrayList<AbstractMorph>();
+
+                for (int i = 0; i < acquired.tagCount(); i++)
+                {
+                    NBTTagCompound acquiredTag = acquired.getCompoundTagAt(i);
+                    AbstractMorph morph = MorphManager.INSTANCE.morphFromNBT(acquiredTag);
+
+                    if (morph != null)
+                    {
+                        acquiredMorphs.add(morph);
+                    }
+                }
+
+                instance.setAcquiredMorphs(acquiredMorphs);
             }
 
-            instance.setAcquiredMorphs(acquiredMorphs);
+            if (!favorites.hasNoTags())
+            {
+                List<Integer> favoritesIndices = new ArrayList<Integer>();
+
+                for (int i = 0; i < favorites.tagCount(); i++)
+                {
+                    favoritesIndices.add(favorites.getIntAt(i));
+                }
+
+                instance.setFavorites(favoritesIndices);
+            }
         }
     }
 }

@@ -21,24 +21,23 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
  * In creative you can access all morphings.
  * 
  * Inspired by Morph and Shape Shifter Z mods (mostly due to the fact that 
- * they're outdated).
+ * they're outdated), however, iChun saying that he's working on Morph for 
+ * 1.10.2, this is really exciting! :D
  */
 @Mod(modid = Metamorph.MODID, name = Metamorph.MODNAME, version = Metamorph.VERSION, guiFactory = Metamorph.GUI_FACTORY)
 public class Metamorph
 {
     /* Metadata fields */
-
     public static final String MODID = "metamorph";
     public static final String MODNAME = "Metamorph";
-    public static final String VERSION = "1.0.2";
+    public static final String VERSION = "1.1";
 
     public static final String CLIENT_PROXY = "mchorse.metamorph.ClientProxy";
     public static final String SERVER_PROXY = "mchorse.metamorph.CommonProxy";
 
-    public static final String GUI_FACTORY = "mchorse.metamorph.config.GuiFactory";
+    public static final String GUI_FACTORY = "mchorse.metamorph.config.gui.GuiFactory";
 
     /* Forge stuff classes */
-
     @SidedProxy(clientSide = CLIENT_PROXY, serverSide = SERVER_PROXY)
     public static CommonProxy proxy;
 
@@ -46,7 +45,6 @@ public class Metamorph
     public static Metamorph instance;
 
     /* Events */
-
     @EventHandler
     public void preLoad(FMLPreInitializationEvent event)
     {
@@ -63,11 +61,14 @@ public class Metamorph
 
     /* Logging */
 
-    public static boolean DEBUG = true;
+    // TODO: Set to false when publishing and remove all unnecessary printlns
+    public static boolean DEBUG = false;
     public static Logger LOGGER;
 
     /**
-     * Log out the message  
+     * Log out the message if in DEBUG mode.
+     * 
+     * But I always forget to turn it off before releasing the mod.
      */
     public static void log(String message)
     {
