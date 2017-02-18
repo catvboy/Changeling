@@ -5,6 +5,7 @@ import mchorse.metamorph.api.morphs.EntityMorph;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.nbt.NBTTagCompound;
 
 /**
  * Iron golem morph
@@ -56,7 +57,7 @@ public class IronGolemMorph extends EntityMorph
         morph.attack = this.attack;
         morph.action = this.action;
 
-        morph.entityData = this.entityData.copy();
+        morph.entityData = (NBTTagCompound) this.entityData.copy();
 
         return morph;
     }

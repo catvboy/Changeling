@@ -13,7 +13,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
@@ -130,7 +129,7 @@ public class EntityUtils
 
             /* We check only strings and primitives, lists and compounds aren't 
              * concern of mine */
-            if (!(aTag instanceof NBTPrimitive) && !(aTag instanceof NBTTagString))
+            if (!(aTag instanceof NBTBase.NBTPrimitive) && !(aTag instanceof NBTTagString))
             {
                 continue;
             }

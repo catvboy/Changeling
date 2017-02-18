@@ -70,7 +70,6 @@ public class MobMorphFactory implements IMorphFactory
         this.addMorph(morphs, world, "Chicken", "{Age:-1}");
         this.addMorph(morphs, world, "Cow", "{Age:-1}");
         this.addMorph(morphs, world, "MushroomCow", "{Age:-1}");
-        this.addMorph(morphs, world, "PolarBear", "{Age:-1}");
 
         /* Sheep variants */
         this.addMorph(morphs, world, "Sheep", "{Sheared:1b}");
@@ -161,6 +160,12 @@ public class MobMorphFactory implements IMorphFactory
     {
         EntityMorph morph = name.equals("VillagerGolem") ? new IronGolemMorph() : new EntityMorph();
         EntityLivingBase entity = (EntityLivingBase) EntityList.createEntityByName(name, world);
+
+        if (entity == null)
+        {
+            return;
+        }
+
         NBTTagCompound data = entity.serializeNBT();
 
         morph.name = name;

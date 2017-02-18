@@ -638,7 +638,7 @@ public class EntityMorph extends AbstractMorph
         morph.attack = this.attack;
         morph.action = this.action;
 
-        morph.entityData = this.entityData.copy();
+        morph.entityData = (NBTTagCompound) this.entityData.copy();
 
         return morph;
     }
