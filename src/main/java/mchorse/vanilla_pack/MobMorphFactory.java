@@ -45,7 +45,7 @@ public class MobMorphFactory implements IMorphFactory
 
     @Override
     @SideOnly(Side.CLIENT)
-    public String displayNameForMorph(String morphName)
+    public String displayNameForMorph(AbstractMorph morphName)
     {
         return null;
     }
@@ -109,8 +109,8 @@ public class MobMorphFactory implements IMorphFactory
         this.addMorph(morphs, world, "EntityHorse", "{Type:0,Variant:6}");
         this.addMorph(morphs, world, "EntityHorse", "Donkey", "{Type:1,Variant:0}");
         this.addMorph(morphs, world, "EntityHorse", "Mule", "{Type:2,Variant:0}");
-        this.addMorph(morphs, world, "EntityHorse", "Skeleton", "{Type:3,Variant:0}");
-        this.addMorph(morphs, world, "EntityHorse", "Zombie", "{Type:4,Variant:0}");
+        this.addMorph(morphs, world, "EntityHorse", "Zombie", "{Type:3,Variant:0}");
+        this.addMorph(morphs, world, "EntityHorse", "Skeleton", "{Type:4,Variant:0}");
 
         /* Adding villager variants */
         this.addMorph(morphs, world, "Villager", "{ProfessionName:\"minecraft:librarian\"}");
@@ -163,9 +163,12 @@ public class MobMorphFactory implements IMorphFactory
 
         if (entity == null)
         {
+            System.out.println("Couldn't add morph " + name + "!");
             return;
         }
 
+        /* Attempt to fix Zoology */
+        entity.deserializeNBT(new NBTTagCompound());
         NBTTagCompound data = entity.serializeNBT();
 
         morph.name = name;
