@@ -12,6 +12,7 @@ import org.objectweb.asm.util.TraceClassVisitor;
 
 import mchorse.metamorph.Metamorph;
 import mchorse.metamorph.coremod.transform.TGuiIngameForge;
+import mchorse.metamorph.coremod.transform.THurtSound;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
@@ -37,7 +38,8 @@ public class MetamorphCoremod implements IFMLLoadingPlugin
     {
         return new String[]
         {
-                TGuiIngameForge.class.getName()
+                TGuiIngameForge.class.getName(),
+                THurtSound.class.getName()
         };
     }
 

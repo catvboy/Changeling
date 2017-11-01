@@ -12,9 +12,11 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -23,6 +25,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
  */
 public class SoundHandler
 {
+    // TODO: playHurtSound->func_184581_c all versions; hurt sounds must be coremodded at least for 1.12 to account for DamageSource
     private static final String[] GET_HURT_SOUND = new String[]{"getHurtSound", "func_184601_bQ"};
     private static final String[] GET_DEATH_SOUND = new String[]{"getDeathSound", "func_184615_bR"};
     private static final String[] PLAY_STEP_SOUND = new String[]{"playStepSound", "func_180429_a"};
@@ -51,10 +54,17 @@ public class SoundHandler
         String soundType = event.getSound().getRegistryName().getResourcePath();
         if (soundType.endsWith(".hurt"))
         {
-            SoundEvent newSound = getHurtSound(soundEntity);
-            if (newSound != null)
+            if (InvokeUtil.MC_MAJOR_VERSION < 12)
             {
-                event.setSound(newSound);
+                /* In Minecraft 1.12+, information about DamageSource is needed
+                 * to determine the correct hurt sound. So getHurtSound will
+                 * be called by a coremod hook to deathSoundHook112 rather than here
+                 */
+                SoundEvent newSound = getHurtSound(soundEntity);
+                if (newSound != null)
+                {
+                    event.setSound(newSound);
+                }
             }
         }
         else if (soundType.endsWith(".death"))
@@ -112,6 +122,30 @@ public class SoundHandler
         }
         
         return null;
+    }
+    
+    // Called by ASM hook in 1.12+
+    @Deprecated
+    public static SoundEvent deathSoundHook112(SoundEvent originalSound, EntityLivingBase soundEntity, DamageSource damageSource)
+    {
+        try
+        {
+            Method methodDeathSound = InvokeUtil.getPrivateMethod(soundEntity.getClass(),
+                    EntityLivingBase.class,
+                    GET_DEATH_SOUND[MetamorphCoremod.obfuscated ? 1 : 0],
+                    DamageSource.class);
+            SoundEvent newSound = (SoundEvent)methodDeathSound.invoke(soundEntity, damageSource);
+            if (newSound != null)
+            {
+                return newSound;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return originalSound;
     }
     
     private static void playStepSound(EntityLivingBase soundEntity)

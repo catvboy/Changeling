@@ -2,8 +2,12 @@ package mchorse.metamorph.util;
 
 import java.lang.reflect.Method;
 
-public class InvokeUtil {
+import net.minecraftforge.common.MinecraftForge;
 
+public class InvokeUtil {
+    
+    public static final int MC_MAJOR_VERSION = Integer.parseInt(MinecraftForge.MC_VERSION.split("\\.")[1]);
+    
     /**
      * Ascends up a class chain until it finds the specified method, regardless
      * of access modifier. Assumes finalClazz is the original declarer of the specified method.
