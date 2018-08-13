@@ -14,6 +14,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -56,8 +57,8 @@ public class MorphAPI
         if (!force && !player.noClip &&
         		!Metamorph.proxy.config.morph_in_tight_spaces &&
         		!EntityUtils.canPlayerMorphFit(player, morphing.getCurrentMorph(), morph)) {
-        	if (!player.worldObj.isRemote) {
-        		((EntityPlayerMP)player).connection.sendPacket(new SPacketChat(new TextComponentTranslation("metamorph.gui.status.tight_space"), (byte)2));
+        	if (!player.world.isRemote) {
+        		((EntityPlayerMP)player).connection.sendPacket(new SPacketChat(new TextComponentTranslation("metamorph.gui.status.tight_space"), ChatType.GAME_INFO));
         	}
         	return false;
         }

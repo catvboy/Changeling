@@ -354,7 +354,7 @@ public class EntityUtils
 	public static boolean canPlayerMorphFit(EntityPlayer player, AbstractMorph currentMorph, AbstractMorph newMorph) {
 		boolean canFit;
 		forceUpdateSize(player, newMorph);
-		canFit = player.worldObj.getCollisionBoxes(player.getEntityBoundingBox()).isEmpty();
+		canFit = player.world.getCollisionBoxes(player, player.getEntityBoundingBox()).isEmpty();
 		forceUpdateSize(player, currentMorph);
 		return canFit;
 	}
