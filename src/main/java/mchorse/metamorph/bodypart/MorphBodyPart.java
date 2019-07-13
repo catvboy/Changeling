@@ -201,7 +201,7 @@ public class MorphBodyPart implements IBodyPart
             for (int i = 0, c = items.tagCount(); i < c; i++)
             {
                 NBTTagCompound compound = items.getCompoundTagAt(i);
-                ItemStack stack = ItemStack.loadItemStackFromNBT(compound);
+                ItemStack stack = new ItemStack(compound);
 
                 this.slots[i] = stack;
             }
