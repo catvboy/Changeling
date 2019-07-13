@@ -2,6 +2,7 @@ package mchorse.metamorph.bodypart;
 
 import com.google.common.base.Objects;
 
+import mchorse.metamorph.capabilities.morphing.IMorphing;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
@@ -28,9 +29,29 @@ public class BodyPart implements IBodyPart
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void update(EntityLivingBase entity)
+    public void update(EntityLivingBase entity, IMorphing cap)
     {
-        if (this.part != null) this.part.update(entity);
+        if (this.part != null) this.part.update(entity, cap);
+    }
+
+    @Override
+    public boolean canMerge(IBodyPart part, boolean isRemote)
+    {
+        if (part instanceof BodyPart)
+        {
+            BodyPart aPart = (BodyPart) part;
+
+            this.limb = aPart.limb;
+
+            if (this.part == null || !this.part.canMerge(aPart.part, isRemote))
+            {
+                this.part = aPart.part == null ? null : aPart.part.clone(isRemote);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     @Override

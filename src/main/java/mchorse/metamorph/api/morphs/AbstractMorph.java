@@ -120,7 +120,7 @@ public abstract class AbstractMorph
      */
     public void morph(EntityLivingBase target)
     {
-        this.lastHealth = target.getMaxHealth();
+        this.lastHealth = (float)target.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).getBaseValue();
         this.setHealth(target, this.settings.health);
 
         for (IAbility ability : this.settings.abilities)
@@ -138,7 +138,7 @@ public abstract class AbstractMorph
     public void demorph(EntityLivingBase target)
     {
         /* 20 is default player's health */
-        this.setHealth(target, this.lastHealth < 20 ? 20 : this.lastHealth);
+        this.setHealth(target, this.lastHealth <= 0.0F ? 20.0F : this.lastHealth);
 
         for (IAbility ability : this.settings.abilities)
         {
@@ -161,11 +161,24 @@ public abstract class AbstractMorph
 
     public static void updateSizeDefault(EntityLivingBase target, float width, float height)
     {
+        /* Any lower than this, and the morph will take damage when hitting the ceiling.
+         * Likewise, an eye height less than this will cause suffocation damage when standing
+         * on the ground.
+         * This is hard-coded in vanilla.
+         */
+        float minEyeToHeadDifference = 0.1F;
+        height = Math.max(height, minEyeToHeadDifference * 2);
+        
         if (target instanceof EntityPlayer && !Metamorph.proxy.config.disable_pov)
         {
-            ((EntityPlayer) target).eyeHeight = height * 0.9F;
+            float eyeHeight = height * 0.9F;
+            if (eyeHeight + minEyeToHeadDifference > height)
+            {
+                eyeHeight = height - minEyeToHeadDifference;
+            }
+            ((EntityPlayer) target).eyeHeight = eyeHeight;
         }
-
+        
         /* This is a total rip-off of EntityPlayer#setSize method */
         if (width != target.width || height != target.height)
         {
@@ -224,8 +237,8 @@ public abstract class AbstractMorph
         // We need to retrieve the max health of the target after modifiers are
         // applied
         // to get a sensible value
-        float proportionalHealth = Math.round(target.getMaxHealth() * ratio);
-        target.setHealth(proportionalHealth <= 0 ? 1 : proportionalHealth);
+        float proportionalHealth = target.getMaxHealth() * ratio;
+        target.setHealth(proportionalHealth <= 0.0F ? Float.MIN_VALUE : proportionalHealth);
     }
 
     /**
@@ -274,7 +287,7 @@ public abstract class AbstractMorph
      * </p>
      */
     public abstract AbstractMorph clone(boolean isRemote);
-    
+
     /* Getting size */
 
     /**
@@ -286,7 +299,7 @@ public abstract class AbstractMorph
      * Get height of this morph 
      */
     public abstract float getHeight(EntityLivingBase target);
-    
+
     /**
      * Get the eye height of this morph.
      * Not used by updateSize.
@@ -302,7 +315,7 @@ public abstract class AbstractMorph
             return 1.62F;
         }
     }
-    
+
     /**
      * Get the default sound that this morph makes when it
      * is hurt
@@ -311,7 +324,7 @@ public abstract class AbstractMorph
     {
         return getHurtSound(target, SoundHandler.GENERIC_DAMAGE);
     }
-    
+
     /**
      * Get the sound that this morph makes when it
      * is hurt by the given DamageSource, or return null
@@ -321,7 +334,7 @@ public abstract class AbstractMorph
     {
         return null;
     }
-    
+
     /**
      * Get the sound that this morph makes when it
      * is killed, or return null for no change.
@@ -330,7 +343,7 @@ public abstract class AbstractMorph
     {
         return null;
     }
-    
+
     /**
      * Make this return true if you override playStepSound(..)
      */
@@ -338,17 +351,19 @@ public abstract class AbstractMorph
     {
         return false;
     }
-    
+
     /**
      * Plays the sound that this morph makes when it
      * takes a step, but only if hasCustomStepSound(..) returns true
      */
-    public void playStepSound(EntityLivingBase target) { }
-    
+    public void playStepSound(EntityLivingBase target)
+    {}
+
     /**
      * Called when the player just changed dimensions
      */
-    public void onChangeDimension(EntityPlayer player, int oldDim, int currentDim) { }
+    public void onChangeDimension(EntityPlayer player, int oldDim, int currentDim)
+    {}
 
     /**
      * Check either if given object is the same as this morph 
@@ -370,7 +385,7 @@ public abstract class AbstractMorph
      * Check whether the morph can be merged (this should allow 
      * overwriting of a morph instead of completely replacing it)
      */
-    public boolean canMerge(AbstractMorph morph)
+    public boolean canMerge(AbstractMorph morph, boolean isRemote)
     {
         return false;
     }

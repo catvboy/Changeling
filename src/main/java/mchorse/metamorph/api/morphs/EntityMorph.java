@@ -74,6 +74,11 @@ public class EntityMorph extends AbstractMorph
     protected boolean customSettings;
 
     /**
+     * If the associated entity is being updated
+     */
+    protected boolean updatingEntity = false;
+
+    /**
      * Did this instance already tried to setup first-person hands 
      */
     @SideOnly(Side.CLIENT)
@@ -343,9 +348,12 @@ public class EntityMorph extends AbstractMorph
         }
 
         /* Update entity */
+        this.updatingEntity = true;
+        this.entity.setEntityInvulnerable(true);
         this.updateEntity(target);
-        entity.deathTime = target.deathTime;
-        entity.hurtTime = target.hurtTime;
+        this.updatingEntity = false;
+        this.entity.deathTime = target.deathTime;
+        this.entity.hurtTime = target.hurtTime;
 
         if (this.entity instanceof EntityRabbit)
         {
@@ -367,7 +375,7 @@ public class EntityMorph extends AbstractMorph
 
             for (ItemStack stack : target.getEquipmentAndArmor())
             {
-                entity.setItemStackToSlot(EntityUtils.slotForIndex(i), stack);
+                this.entity.setItemStackToSlot(EntityUtils.slotForIndex(i), stack);
 
                 i++;
             }
@@ -376,66 +384,69 @@ public class EntityMorph extends AbstractMorph
         }
 
         /* Injecting player's properties */
-        entity.setPosition(target.posX, target.posY, target.posZ);
+        this.entity.setPosition(target.posX, target.posY, target.posZ);
 
-        entity.lastTickPosX = target.lastTickPosX;
-        entity.lastTickPosY = target.lastTickPosY;
-        entity.lastTickPosZ = target.lastTickPosZ;
+        this.entity.lastTickPosX = target.lastTickPosX;
+        this.entity.lastTickPosY = target.lastTickPosY;
+        this.entity.lastTickPosZ = target.lastTickPosZ;
 
-        entity.prevPosX = target.prevPosX;
-        entity.prevPosY = target.prevPosY;
-        entity.prevPosZ = target.prevPosZ;
+        this.entity.prevPosX = target.prevPosX;
+        this.entity.prevPosY = target.prevPosY;
+        this.entity.prevPosZ = target.prevPosZ;
 
-        entity.rotationYaw = target.rotationYaw;
-        entity.rotationPitch = target.rotationPitch;
+        this.entity.rotationYaw = target.rotationYaw;
+        this.entity.rotationPitch = target.rotationPitch;
 
-        entity.motionX = target.motionX;
-        entity.motionY = target.motionY;
-        entity.motionZ = target.motionZ;
+        this.entity.motionX = target.motionX;
+        this.entity.motionY = target.motionY;
+        this.entity.motionZ = target.motionZ;
 
-        entity.rotationYawHead = target.rotationYawHead;
-        entity.renderYawOffset = target.renderYawOffset;
+        this.entity.rotationYawHead = target.rotationYawHead;
+        this.entity.renderYawOffset = target.renderYawOffset;
 
-        entity.isSwingInProgress = target.isSwingInProgress;
-        entity.swingProgress = target.swingProgress;
-        entity.limbSwing = target.limbSwing;
-        entity.limbSwingAmount = target.limbSwingAmount;
+        this.entity.isSwingInProgress = target.isSwingInProgress;
+        this.entity.swingProgress = target.swingProgress;
+        this.entity.limbSwing = target.limbSwing;
+        this.entity.limbSwingAmount = target.limbSwingAmount;
 
-        entity.prevPosX = target.prevPosX;
-        entity.prevPosY = target.prevPosY;
-        entity.prevPosZ = target.prevPosZ;
+        this.entity.prevPosX = target.prevPosX;
+        this.entity.prevPosY = target.prevPosY;
+        this.entity.prevPosZ = target.prevPosZ;
 
-        entity.prevRotationYaw = target.prevRotationYaw;
-        entity.prevRotationPitch = target.prevRotationPitch;
-        entity.prevRotationYawHead = target.prevRotationYawHead;
-        entity.prevRenderYawOffset = target.prevRenderYawOffset;
+        this.entity.prevRotationYaw = target.prevRotationYaw;
+        this.entity.prevRotationPitch = target.prevRotationPitch;
+        this.entity.prevRotationYawHead = target.prevRotationYawHead;
+        this.entity.prevRenderYawOffset = target.prevRenderYawOffset;
 
-        entity.prevSwingProgress = target.prevSwingProgress;
-        entity.prevLimbSwingAmount = target.prevLimbSwingAmount;
+        this.entity.prevSwingProgress = target.prevSwingProgress;
+        this.entity.prevLimbSwingAmount = target.prevLimbSwingAmount;
 
         if (target instanceof EntityPlayer && ((EntityPlayer) target).isCreative())
         {
-            entity.fallDistance = 0;
+            this.entity.fallDistance = 0;
         }
         else
         {
-            entity.fallDistance = target.fallDistance;
+            this.entity.fallDistance = target.fallDistance;
         }
 
-        entity.setSneaking(target.isSneaking());
-        entity.setSprinting(target.isSprinting());
-        entity.onGround = target.onGround;
-        entity.isAirBorne = target.isAirBorne;
-        entity.ticksExisted = target.ticksExisted;
+        this.entity.setSneaking(target.isSneaking());
+        this.entity.setSprinting(target.isSprinting());
+        this.entity.onGround = target.onGround;
+        this.entity.isAirBorne = target.isAirBorne;
+        this.entity.ticksExisted = target.ticksExisted;
         /* Fighting with death of entities like zombies */
-        entity.setHealth(target.getHealth());
-        /* Prevent drowning sound of squids, guardians, etc... */
-        entity.setAir(300);
+        this.entity.setHealth(target.getHealth());
+
+        if (cap != null)
+        {
+            this.entity.setAir(cap.getHasSquidAir() ? cap.getSquidAir() : target.getAir());
+        }
 
         /* Now goes the code responsible for achieving somewhat riding 
          * support. This is ridiculous... */
         boolean targetRiding = target.isRiding();
-        boolean entityRiding = entity.isRiding();
+        boolean entityRiding = this.entity.isRiding();
 
         if (targetRiding && !entityRiding)
         {
@@ -443,13 +454,13 @@ public class EntityMorph extends AbstractMorph
         }
         else if (!targetRiding && entityRiding)
         {
-            entity.dismountRidingEntity();
+            this.entity.dismountRidingEntity();
         }
 
         if (targetRiding)
         {
             /* One day, this cast is going to backfire, I'll wait for it... */
-            EntityPig ride = (EntityPig) entity.getRidingEntity();
+            EntityPig ride = (EntityPig) this.entity.getRidingEntity();
             Entity targetRide = target.getRidingEntity();
 
             if (ride == null || targetRide == null)
@@ -490,6 +501,11 @@ public class EntityMorph extends AbstractMorph
         {
             this.entity.onUpdate();
         }
+    }
+
+    public boolean isUpdatingEntity()
+    {
+        return this.updatingEntity;
     }
 
     @Override
