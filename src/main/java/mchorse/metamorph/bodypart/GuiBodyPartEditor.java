@@ -202,7 +202,7 @@ public class GuiBodyPartEditor extends GuiMorphPanel<AbstractMorph, GuiAbstractM
     {
         if (this.active != null)
         {
-            this.active.stack = stack == null ? null : stack.copy();
+            this.active.stack = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
             this.part.part.slots[this.active.slot] = this.active.stack;
             this.inventory.visible = false;
             this.part.part.updateEntity();
