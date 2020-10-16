@@ -40,8 +40,7 @@ public class CommandMorph extends CommandBase
     @Override
     public int getRequiredPermissionLevel()
     {
-        /* Because /op command has the same level, and I trust it */
-        return 3;
+        return 2;
     }
 
     @Override
@@ -70,6 +69,7 @@ public class CommandMorph extends CommandBase
         if (args.length < 2)
         {
             MorphAPI.demorph(player);
+
             if (sender.sendCommandFeedback())
             {
                 sender.sendMessage(new TextComponentTranslation("metamorph.success.demorph", args[0]));
@@ -109,6 +109,7 @@ public class CommandMorph extends CommandBase
             }
             
             MorphAPI.morph(player, newMorph, true);
+
             if (sender.sendCommandFeedback())
             {
                 sender.sendMessage(new TextComponentTranslation("metamorph.success.morph", args[0], args[1]));
