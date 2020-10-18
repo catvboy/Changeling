@@ -91,4 +91,13 @@ public class WorldEventListenerWrapper implements IWorldEventListener
         delegate.sendBlockBreakProgress(breakerId, pos, progress);
     }
 
+	@Override
+	public void spawnParticle(int id, boolean ignoreRange, boolean p_190570_3_, double x,
+			double y, double z, double xSpeed, double ySpeed, double zSpeed,
+			int... parameters) {
+		delegate.spawnParticle(id, ignoreRange, p_190570_3_, x,
+				y, z, xSpeed, ySpeed, zSpeed,
+				parameters);
+	}
+
 }

@@ -17,6 +17,7 @@ import mchorse.metamorph.network.Dispatcher;
 import mchorse.metamorph.world.WorldHandler;
 import mchorse.vanilla_pack.MetamorphFactory;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
