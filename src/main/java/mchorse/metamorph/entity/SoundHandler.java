@@ -81,7 +81,7 @@ public class SoundHandler
         }
         String soundType = soundResource.getResourcePath();
         
-        if (soundType.endsWith(".hurt"))
+        if (soundType.contains(".hurt"))
         {
             SoundEvent newSound = morph.getHurtSound(player, morphing.getLastDamageSource());
             if (newSound == NO_SOUND)
