@@ -42,6 +42,11 @@ public class Morphing implements IMorphing
     private AbstractMorph previousMorph;
 
     /**
+     * Used for recent morph hotkey
+     */
+    private AbstractMorph lastSelectedMorph;
+
+    /**
      * Animation timer 
      */
     private int animation;
@@ -277,7 +282,7 @@ public class Morphing implements IMorphing
             {
                 AbstractMorph current = this.morph.get();
 
-                this.setHealth(player, current.settings.health);
+                this.setHealth(player, current.getSettings().health);
                 current.morph(player);
             }
 
@@ -285,6 +290,22 @@ public class Morphing implements IMorphing
         }
 
         return false;
+    }
+
+    /**
+     * Get morph of last survival morph attempt
+     */
+    public AbstractMorph getLastSelectedMorph()
+    {
+        return lastSelectedMorph;
+    }
+
+    /**
+     * Set morph of last survival morph attempt
+     */
+    public void setLastSelectedMorph(AbstractMorph morph)
+    {
+        this.lastSelectedMorph = morph;
     }
 
     @Override
@@ -448,7 +469,7 @@ public class Morphing implements IMorphing
 
             if (!Metamorph.disableHealth.get())
             {
-                this.setMaxHealth(player, morph.settings.health);
+                this.setMaxHealth(player, morph.getSettings().health);
             }
 
             morph.update(player);

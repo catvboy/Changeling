@@ -2,6 +2,7 @@ package mchorse.metamorph.client;
 
 import mchorse.metamorph.ClientProxy;
 import mchorse.metamorph.Metamorph;
+import mchorse.metamorph.api.MorphAPI;
 import mchorse.metamorph.api.MorphManager;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
@@ -33,9 +34,10 @@ public class KeyboardHandler
     private KeyBinding keyAction;
     private KeyBinding keyCreativeMenu;
     private KeyBinding keySelectorMenu;
-    private KeyBinding keySurvivalMenu;
+    public KeyBinding keySurvivalMenu;
 
     /* Morph related keys */
+    public KeyBinding keyMorphRecent;
     public KeyBinding keyDemorph;
 
     public KeyboardHandler()
@@ -48,6 +50,7 @@ public class KeyboardHandler
         keySelectorMenu = new KeyBinding("key.metamorph.selector_menu", Keyboard.KEY_MINUS, category);
         keySurvivalMenu = new KeyBinding("key.metamorph.survival_menu", Keyboard.KEY_X, category);
 
+        keyMorphRecent = new KeyBinding("key.metamorph.morph_recent", Keyboard.KEY_RETURN, category);
         keyDemorph = new KeyBinding("key.metamorph.demorph", Keyboard.KEY_PERIOD, category);
 
         /* Register them in the client registry */
@@ -56,6 +59,7 @@ public class KeyboardHandler
         ClientRegistry.registerKeyBinding(keySelectorMenu);
         ClientRegistry.registerKeyBinding(keySurvivalMenu);
 
+        ClientRegistry.registerKeyBinding(keyMorphRecent);
         ClientRegistry.registerKeyBinding(keyDemorph);
     }
 
@@ -99,13 +103,23 @@ public class KeyboardHandler
             mc.displayGuiScreen(ClientProxy.getSurvivalScreen().open());
             wasUsed = true;
         }
+        
+        /* Morph into the most recent attempted morph */
+        if (this.keyMorphRecent.isPressed() && !spectator)
+        {
+            if (morphing != null && morphing.getLastSelectedMorph() != null)
+            {
+                MorphAPI.selectMorph(morphing.getLastSelectedMorph());
+                wasUsed = true;
+            }
+        }
 
         /* Demorph from current morph */
         if (this.keyDemorph.isPressed() && !spectator)
         {
             if (morphing != null && morphing.isMorphed())
             {
-                Dispatcher.sendToServer(new PacketSelectMorph(-1));
+                MorphAPI.selectDemorph();
                 wasUsed = true;
             }
         }
