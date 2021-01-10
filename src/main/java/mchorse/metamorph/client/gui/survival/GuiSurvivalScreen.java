@@ -96,14 +96,10 @@ public class GuiSurvivalScreen extends GuiBase
     {
         return Metamorph.pauseGUIInSP.get();
     }
-
-    /**
-     * Open the survival morph menu and update the morphs element
-     */
-    public GuiSurvivalScreen open()
+    
+    public void setupSections()
     {
         EntityPlayer player = Minecraft.getMinecraft().player;
-        IMorphing cap = Morphing.get(player);
         boolean creative = player.isCreative();
         boolean allowed = Metamorph.allowMorphingIntoCategoryMorphs.get();
 
@@ -113,10 +109,26 @@ public class GuiSurvivalScreen extends GuiBase
             this.allowed = allowed;
             this.morphs.setupSections(creative, (section) -> this.fill(section.morph));
         }
+    }
+
+    /**
+     * Open the survival morph menu and update the morphs element
+     */
+    public GuiSurvivalScreen open()
+    {
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        IMorphing cap = Morphing.get(player);
+
+        this.setupSections();
 
         this.setSelected(cap.getCurrentMorph());
 
         return this;
+    }
+    
+    public void onKeyPre()
+    {
+        setupSections();
     }
 
     /**

@@ -21,7 +21,7 @@ public class AcquiredCategory extends MorphCategory
 
 	public void setMorph(List<AbstractMorph> morphs)
 	{
-		this.morphs = morphs;
+	    this.morphs = morphs;
 	}
 
 	@Override
