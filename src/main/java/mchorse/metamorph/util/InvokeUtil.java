@@ -9,23 +9,17 @@ import mchorse.metamorph.Metamorph;
 
 public class InvokeUtil
 {
-    protected static final int MAX_ERRORS_PER_CLASS = 5;
-    protected static ThreadLocal<WeakHashMap<Class<?>, Integer>> classErrorCounts = new ThreadLocal<>();
-    
-    protected static WeakHashMap<Class<?>, Integer> getClassBlacklist()
-    {
-        WeakHashMap<Class<?>, Integer> blacklist = classErrorCounts.get();
-        if (blacklist == null) {
-            blacklist = new WeakHashMap<>();
-            classErrorCounts.set(blacklist);
-        }
-        return blacklist;
-    }
+    private static final int MAX_ERRORS_PER_CLASS = 5;
+    private static Object classErrorCountLock = new Object();
+    private static WeakHashMap<Class<?>, Integer> classErrorCounts = new WeakHashMap<>();
     
     protected static boolean isClassBlacklisted(Class<?> clazz)
     {
-        WeakHashMap<Class<?>, Integer> blacklist = getClassBlacklist();
-        Integer count = blacklist.get(clazz);
+        Integer count;
+        synchronized(classErrorCountLock)
+        {
+            count = classErrorCounts.get(clazz);
+        }
         if (count == null)
         {
             count = 0;
@@ -35,22 +29,25 @@ public class InvokeUtil
     
     protected static void incrementClassErrors(Class<?> clazz)
     {
-        WeakHashMap<Class<?>, Integer> blacklist = getClassBlacklist();
-        Integer count = blacklist.get(clazz);
-        if (count == null)
+        Integer count;
+        synchronized(classErrorCountLock)
         {
-            count = 1;
+            count = classErrorCounts.get(clazz);
+            if (count == null)
+            {
+                count = 1;
+            }
+            else
+            {
+                ++count;
+            }
+            classErrorCounts.put(clazz, count);
         }
-        else
-        {
-            ++count;
-        }
-        blacklist.put(clazz, count);
         
         if (count == MAX_ERRORS_PER_CLASS)
         {
             Metamorph.LOGGER.error("Too many errors for class " + clazz.getName() + ". " +
-                    "Class will be blacklisted from reflection on this thread.");
+                    "Class will be blacklisted from reflection.");
         }
     }
 
