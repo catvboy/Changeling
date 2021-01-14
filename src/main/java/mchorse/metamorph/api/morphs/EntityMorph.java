@@ -417,7 +417,7 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
                 {
                     GlStateManager.pushMatrix();
                     entry.getValue().postRender(scale);
-                    part.render(target, partialTicks);
+                    part.render(this, target, partialTicks);
                     GlStateManager.popMatrix();
 
                     break;
@@ -521,8 +521,6 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
         }
 
         /* Update player */
-        this.updateSize(target, this.entity.width, this.entity.height);
-
         super.update(target);
 
         /* Update entity's inventory */
@@ -664,7 +662,7 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
             horse.setHorseSaddled(this.entityData.hasKey("SaddleItem"));
         }
 
-        this.parts.updateBodyLimbs(target);
+        this.parts.updateBodyLimbs(this, target);
     }
 
     protected void updateEntity(EntityLivingBase target)
@@ -696,15 +694,18 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
     }
 
     @Override
-    public void updateSize(EntityLivingBase target, float width, float height)
+    protected void updateUserHitbox(EntityLivingBase target)
     {
+        float width = this.entity.width;
+        float height = this.entity.height;
+
         boolean isAnimalChild = this.entity instanceof EntityAgeable && this.entityData.getInteger("Age") < 0;
 
         /* Because Minecraft is shit at syncing data!
-         * 
-         * The problem is that Minecraft changes to correct size of baby 
-         * animals on the client, but on the server it doesn't change anything 
-         * thus I have to rely on proivded NBT data for figuring out if an 
+         *
+         * The problem is that Minecraft changes to correct size of baby
+         * animals on the client, but on the server it doesn't change anything
+         * thus I have to rely on proivded NBT data for figuring out if an
          * animal entity is being a baby */
         if (!target.world.isRemote && isAnimalChild)
         {
@@ -712,7 +713,7 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
             height *= 0.5;
         }
 
-        super.updateSize(target, width, height);
+        this.updateSize(target, width, height);
     }
 
     /**
