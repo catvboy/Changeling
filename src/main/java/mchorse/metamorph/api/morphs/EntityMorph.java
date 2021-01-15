@@ -1,5 +1,17 @@
 package mchorse.metamorph.api.morphs;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import mchorse.mclib.client.gui.utils.GuiUtils;
 import mchorse.metamorph.Metamorph;
 import mchorse.metamorph.api.EntityUtils;
@@ -50,17 +62,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.apache.commons.lang3.reflect.FieldUtils;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Entity morph class
@@ -1024,7 +1025,12 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
         try
         {
             Method methodHurtSound = InvokeUtil.getPrivateMethod(entity.getClass(), EntityLivingBase.class, SoundHandler.GET_HURT_SOUND.getName());
-            SoundEvent hurtSound = (SoundEvent) methodHurtSound.invoke(entity);
+            if (methodHurtSound == null)
+            {
+                return null;
+            }
+
+            SoundEvent hurtSound = (SoundEvent)methodHurtSound.invoke(entity);
             if (hurtSound == null)
             {
                 hurtSound = SoundHandler.NO_SOUND;
@@ -1046,6 +1052,11 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
         try
         {
             Method methodDeathSound = InvokeUtil.getPrivateMethod(entity.getClass(), EntityLivingBase.class, SoundHandler.GET_DEATH_SOUND.getName());
+            if (methodDeathSound == null)
+            {
+                return null;
+            }
+
             SoundEvent deathSound = (SoundEvent) methodDeathSound.invoke(entity);
             if (deathSound == null)
             {
@@ -1074,6 +1085,10 @@ public class EntityMorph extends AbstractMorph implements IBodyPartProvider
         try
         {
             Method methodPlayStep = InvokeUtil.getPrivateMethod(entity.getClass(), Entity.class, SoundHandler.PLAY_STEP_SOUND.getName(), BlockPos.class, Block.class);
+            if (methodPlayStep == null)
+            {
+                return;
+            }
 
             int x = MathHelper.floor(entity.posX);
             int y = MathHelper.floor(entity.posY - 0.20000000298023224D);

@@ -27,6 +27,8 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 
+import java.io.IOException;
+
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -53,7 +55,8 @@ public class GuiSurvivalScreen extends GuiBase
     
     AbstractMorph lastMorphSelected = null;
     private static final int DOUBLE_CLICK_TIME_MS = 500;
-    private long lastClickTime = -DOUBLE_CLICK_TIME_MS - 1;
+    private long lastMorphSelectTime = -DOUBLE_CLICK_TIME_MS - 1;
+    private boolean isClicking = false;
 
     public GuiSurvivalScreen()
     {
@@ -96,14 +99,10 @@ public class GuiSurvivalScreen extends GuiBase
     {
         return Metamorph.pauseGUIInSP.get();
     }
-
-    /**
-     * Open the survival morph menu and update the morphs element
-     */
-    public GuiSurvivalScreen open()
+    
+    public void setupSections()
     {
         EntityPlayer player = Minecraft.getMinecraft().player;
-        IMorphing cap = Morphing.get(player);
         boolean creative = player.isCreative();
         boolean allowed = Metamorph.allowMorphingIntoCategoryMorphs.get();
 
@@ -113,10 +112,26 @@ public class GuiSurvivalScreen extends GuiBase
             this.allowed = allowed;
             this.morphs.setupSections(creative, (section) -> this.fill(section.morph));
         }
+    }
+
+    /**
+     * Open the survival morph menu and update the morphs element
+     */
+    public GuiSurvivalScreen open()
+    {
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        IMorphing cap = Morphing.get(player);
+
+        this.setupSections();
 
         this.setSelected(cap.getCurrentMorph());
 
         return this;
+    }
+    
+    public void onKeyPre()
+    {
+        setupSections();
     }
 
     /**
@@ -149,22 +164,47 @@ public class GuiSurvivalScreen extends GuiBase
         checkCurrentMorph(currentMorph, this.morphs.getSelected());
     }
     
-    private void checkDoubleClick(AbstractMorph morph)
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
+    {
+        isClicking = true;
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+    
+    @Override
+    protected void mouseReleased(int mouseX, int mouseY, int state)
+    {
+        isClicking = false;
+        super.mouseReleased(mouseX, mouseY, state);
+    }
+    
+    @Override
+    protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
+    {
+        isClicking = false;
+        super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+    }
+    
+    private void checkDoubleClickMorph(AbstractMorph morph)
     {
         if (morph == null)
         {
             return;
         }
+        if (!isClicking)
+        {
+            return;
+        }
         
-        long clickTime = Minecraft.getSystemTime();
-        long dt = clickTime - lastClickTime;
-        lastClickTime = clickTime;
+        long morphSelectTime = Minecraft.getSystemTime();
+        long dt = morphSelectTime - lastMorphSelectTime;
+        lastMorphSelectTime = morphSelectTime;
         if (dt > 0 && dt < DOUBLE_CLICK_TIME_MS && lastMorphSelected.equals(morph))
         {
             MorphAPI.selectMorph(morph);
             GuiUtils.playClick();
             // Prevent re-fires
-            lastClickTime = 0;
+            lastMorphSelectTime = 0;
             this.closeScreen();
         }
         lastMorphSelected = morph;
@@ -191,7 +231,7 @@ public class GuiSurvivalScreen extends GuiBase
             this.keybind.setKeybind(morph.keybind);
         }
 
-        checkDoubleClick(morph);
+        checkDoubleClickMorph(morph);
     }
 
     /**
