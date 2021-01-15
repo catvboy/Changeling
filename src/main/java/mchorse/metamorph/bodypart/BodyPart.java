@@ -3,7 +3,10 @@ package mchorse.metamorph.bodypart;
 import com.google.common.base.Objects;
 import mchorse.mclib.client.Draw;
 import mchorse.mclib.client.gui.framework.elements.GuiModelRenderer;
+import mchorse.mclib.utils.Interpolation;
 import mchorse.metamorph.api.MorphUtils;
+import mchorse.metamorph.api.morphs.utils.Animation;
+import mchorse.metamorph.api.morphs.utils.IAnimationProvider;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.opengl.GL11;
@@ -36,9 +39,14 @@ public class BodyPart
     public Vector3f rotate = new Vector3f(180, 0, 0);
     public boolean useTarget = false;
     public boolean enabled = true;
+    public boolean animate = true;
     public String limb = "";
 
     private EntityLivingBase entity;
+
+    private Vector3f lastTranslate;
+    private Vector3f lastScale;
+    private Vector3f lastRotate;
 
     @SideOnly(Side.CLIENT)
     public void init()
@@ -66,7 +74,7 @@ public class BodyPart
     }
 
     @SideOnly(Side.CLIENT)
-    public void render(EntityLivingBase entity, float partialTicks)
+    public void render(AbstractMorph parent, EntityLivingBase entity, float partialTicks)
     {
         entity = this.useTarget ? entity : this.entity;
 
@@ -75,14 +83,42 @@ public class BodyPart
             return;
         }
 
+        Animation animation = parent instanceof IAnimationProvider ? ((IAnimationProvider) parent).getAnimation() : null;
+
+        float tx = this.translate.x;
+        float ty = this.translate.y;
+        float tz = this.translate.z;
+        float sx = this.scale.x;
+        float sy = this.scale.y;
+        float sz = this.scale.z;
+        float rx = this.rotate.x;
+        float ry = this.rotate.y;
+        float rz = this.rotate.z;
+
+        if (animation != null && animation.isInProgress() && this.lastTranslate != null && this.animate)
+        {
+            Interpolation inter = animation.interp;
+            float factor = animation.getFactor(partialTicks);
+
+            tx = inter.interpolate(this.lastTranslate.x, tx, factor);
+            ty = inter.interpolate(this.lastTranslate.y, ty, factor);
+            tz = inter.interpolate(this.lastTranslate.z, tz, factor);
+            sx = inter.interpolate(this.lastScale.x, sx, factor);
+            sy = inter.interpolate(this.lastScale.y, sy, factor);
+            sz = inter.interpolate(this.lastScale.z, sz, factor);
+            rx = inter.interpolate(this.lastRotate.x, rx, factor);
+            ry = inter.interpolate(this.lastRotate.y, ry, factor);
+            rz = inter.interpolate(this.lastRotate.z, rz, factor);
+        }
+
         GL11.glPushMatrix();
-        GL11.glTranslatef(this.translate.x, this.translate.y, this.translate.z);
+        GL11.glTranslatef(tx, ty, tz);
 
-        GL11.glRotatef(this.rotate.z, 0, 0, 1);
-        GL11.glRotatef(this.rotate.y, 0, 1, 0);
-        GL11.glRotatef(this.rotate.x, 1, 0, 0);
+        GL11.glRotatef(rz, 0, 0, 1);
+        GL11.glRotatef(ry, 0, 1, 0);
+        GL11.glRotatef(rx, 1, 0, 0);
 
-        GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+        GL11.glScalef(sx, sy, sz);
 
         float rotationYaw = entity.renderYawOffset;
         float prevRotationYaw = entity.prevRenderYawOffset;
@@ -125,7 +161,7 @@ public class BodyPart
         GL11.glPopMatrix();
     }
 
-    public void update(EntityLivingBase entity)
+    public void update(AbstractMorph parent, EntityLivingBase entity)
     {
         entity = this.useTarget ? entity : this.entity;
 
@@ -161,12 +197,17 @@ public class BodyPart
 
     public boolean canMerge(BodyPart part)
     {
+        this.lastTranslate = new Vector3f(this.translate);
+        this.lastScale = new Vector3f(this.scale);
+        this.lastRotate = new Vector3f(this.rotate);
+
         this.morph.copy(part.morph);
         this.translate.set(part.translate);
         this.scale.set(part.scale);
         this.rotate.set(part.rotate);
         this.useTarget = part.useTarget;
         this.enabled = part.enabled;
+        this.animate = part.animate;
 
         for (int i = 0; i < part.slots.length; i++)
         {
@@ -176,6 +217,18 @@ public class BodyPart
         this.limb = part.limb;
 
         return true;
+    }
+
+    public void pause(BodyPart previous, int offset)
+    {
+        if (previous != null)
+        {
+            this.lastTranslate = new Vector3f(previous.translate);
+            this.lastScale = new Vector3f(previous.scale);
+            this.lastRotate = new Vector3f(previous.rotate);
+        }
+
+        MorphUtils.pause(this.morph.get(), previous == null ? null : previous.morph.get(), offset);
     }
 
     @Override
@@ -193,6 +246,7 @@ public class BodyPart
             result = result && Objects.equal(this.rotate, part.rotate);
             result = result && this.useTarget == part.useTarget;
             result = result && this.enabled == part.enabled;
+            result = result && this.animate == part.animate;
 
             for (int i = 0; i < this.slots.length; i++)
             {
@@ -215,6 +269,7 @@ public class BodyPart
         part.rotate.set(this.rotate);
         part.useTarget = this.useTarget;
         part.enabled = this.enabled;
+        part.animate = this.animate;
 
         for (int i = 0; i < this.slots.length; i++)
         {
@@ -252,6 +307,7 @@ public class BodyPart
 
         if (tag.hasKey("Target")) this.useTarget = tag.getBoolean("Target");
         if (tag.hasKey("Enabled")) this.enabled = tag.getBoolean("Enabled");
+        if (tag.hasKey("Animate")) this.animate = tag.getBoolean("Animate");
         if (tag.hasKey("Limb")) this.limb = tag.getString("Limb");
     }
 
@@ -298,6 +354,7 @@ public class BodyPart
 
         if (this.useTarget) tag.setBoolean("Target", this.useTarget);
         if (!this.enabled) tag.setBoolean("Enabled", this.enabled);
+        if (!this.animate) tag.setBoolean("Animate", this.animate);
         if (!this.limb.isEmpty()) tag.setString("Limb", this.limb);
     }
 }
