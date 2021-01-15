@@ -4,6 +4,7 @@ import mchorse.metamorph.Metamorph;
 import mchorse.metamorph.api.MorphManager;
 import mchorse.metamorph.api.MorphSettings;
 import mchorse.metamorph.api.abilities.IAbility;
+import mchorse.metamorph.api.morphs.utils.Hitbox;
 import mchorse.metamorph.entity.SoundHandler;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -151,6 +152,11 @@ public abstract class AbstractMorph
     }
 
     /**
+     * Custom hitbox setting
+     */
+    public Hitbox hitbox = new Hitbox();
+
+    /**
      * Whether this morph is erroring when rendering
      */
     public boolean errorRendering;
@@ -227,8 +233,10 @@ public abstract class AbstractMorph
      */
     public void update(EntityLivingBase target)
     {
+        this.updateHitbox(target);
+
         MorphSettings settings = this.getSettings();
-        if (getSettings().speed != 0.1F)
+        if (settings.speed != 0.1F)
         {
             target.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(settings.speed);
         }
@@ -271,18 +279,42 @@ public abstract class AbstractMorph
 
     /* Adjusting size */
 
-    /**
-     * Update player's size based on given width and height.
-     * 
-     * This method is responsible for doing trickshots, 360 noscopes while being 
-     * morped in a morph. Probably...
-     */
+    protected void updateHitbox(EntityLivingBase target)
+    {
+        if (this.hitbox.enabled)
+        {
+            float height = target.isSneaking() ? this.hitbox.sneakingHeight : this.hitbox.height;
+
+            this.updateSize(target, this.hitbox.width, height, this.hitbox.eye);
+        }
+        else
+        {
+            this.updateUserHitbox(target);
+        }
+    }
+
+    protected void updateUserHitbox(EntityLivingBase target)
+    {}
+
     public void updateSize(EntityLivingBase target, float width, float height)
     {
         updateSizeDefault(target, width, height);
     }
 
+    /**
+     * Update player's size based on given width and height
+     */
+    public void updateSize(EntityLivingBase target, float width, float height, float eyeFactor)
+    {
+        updateSizeDefault(target, width, height, eyeFactor);
+    }
+
     public static void updateSizeDefault(EntityLivingBase target, float width, float height)
+    {
+        updateSizeDefault(target, width, height, 0.9F);
+    }
+
+    public static void updateSizeDefault(EntityLivingBase target, float width, float height, float eyeFactor)
     {
         /* Any lower than this, and the morph will take damage when hitting the ceiling.
          * Likewise, an eye height less than this will cause suffocation damage when standing
@@ -291,17 +323,17 @@ public abstract class AbstractMorph
          */
         float minEyeToHeadDifference = 0.1F;
         height = Math.max(height, minEyeToHeadDifference * 2);
-        
+
         if (target instanceof EntityPlayer && !Metamorph.disablePov.get())
         {
-            float eyeHeight = height * 0.9F;
+            float eyeHeight = height * eyeFactor;
             if (eyeHeight + minEyeToHeadDifference > height)
             {
                 eyeHeight = height - minEyeToHeadDifference;
             }
             ((EntityPlayer) target).eyeHeight = eyeHeight;
         }
-        
+
         /* This is a total rip-off of EntityPlayer#setSize method */
         if (width != target.width || height != target.height)
         {
@@ -378,6 +410,8 @@ public abstract class AbstractMorph
         this.activeSettings = from.activeSettings != null ? from.activeSettings.copy() : null;
         this.forcedSettings = from.forcedSettings;
         this.needSettingsUpdate = from.needSettingsUpdate;
+        this.keybind = from.keybind;
+        this.hitbox.copy(from.hitbox);
     }
 
     /* Getting size */
@@ -468,7 +502,8 @@ public abstract class AbstractMorph
             AbstractMorph morph = (AbstractMorph) obj;
 
             return Objects.equals(this.name, morph.name) &&
-                Objects.equals(this.displayName, morph.displayName);
+                Objects.equals(this.displayName, morph.displayName) &&
+                Objects.equals(this.hitbox, morph.hitbox);
         }
 
         return super.equals(obj);
@@ -490,12 +525,24 @@ public abstract class AbstractMorph
     {}
 
     /**
+     * This method should be used by any morphs that support merging to copy essential
+     * whenever they merge
+     */
+    protected void mergeBasic(AbstractMorph morph)
+    {
+        this.displayName = morph.displayName;
+        this.settings = morph.settings;
+        this.hitbox.copy(morph.hitbox);
+    }
+
+    /**
      * Reset data for editing 
      */
     public void reset()
     {
         setActiveSettings(null);
         clearForcedSettings();
+        this.hitbox.reset();
     }
 
     /* Reading / writing to NBT */
@@ -542,6 +589,11 @@ public abstract class AbstractMorph
         {
             tag.setInteger("Keybind", this.keybind);
         }
+
+        if (!this.hitbox.isDefault())
+        {
+            tag.setTag("Hitbox", this.hitbox.toNBT());
+        }
     }
 
     /**
@@ -572,6 +624,11 @@ public abstract class AbstractMorph
         if (tag.hasKey("Keybind"))
         {
             this.keybind = tag.getInteger("Keybind");
+        }
+
+        if (tag.hasKey("Hitbox"))
+        {
+            this.hitbox.fromNBT(tag.getCompoundTag("Hitbox"));
         }
     }
 }
