@@ -51,6 +51,7 @@ public class UserSection extends MorphSection
 
 		this.acquired = new AcquiredCategory(this, "acquired");
 		this.recent = new RecentCategory(this, "recent");
+		this.add(this.acquired);
 	}
 
 	@Override

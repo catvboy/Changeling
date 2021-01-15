@@ -31,25 +31,14 @@ public class GuiSurvivalMorphs extends GuiMorphs
 		MorphList list = MorphManager.INSTANCE.list;
 		IMorphing cap = Morphing.get(mc.player);
 
-		MorphSection section;
-		AcquiredCategory category;
+		UserSection section = (UserSection)list.sections.get(0);
+		AcquiredCategory category = section.acquired;
 
-		if (creative || Metamorph.allowMorphingIntoCategoryMorphs.get())
+		if (!(creative || Metamorph.allowMorphingIntoCategoryMorphs.get()))
 		{
-			UserSection user = (UserSection) list.sections.get(0);
-
-			section = user;
-			section.update(mc.world);
-			category = user.acquired;
-		}
-		else
-		{
-			section = new MorphSection("user");
-			category = new AcquiredCategory(section, "acquired");
-
 			category.setMorph(cap == null ? Collections.emptyList() : cap.getAcquiredMorphs());
-			section.add(category);
 		}
+        section.update(mc.world);
 
 		GuiMorphSection element = section.getGUI(mc, null, callback);
 
