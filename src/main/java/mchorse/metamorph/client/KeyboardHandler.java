@@ -128,6 +128,7 @@ public class KeyboardHandler
         {
             int key = Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey();
 
+            ClientProxy.getSurvivalScreen().onKeyPre();
             MorphManager.INSTANCE.list.keyTyped(player, key);
         }
     }
