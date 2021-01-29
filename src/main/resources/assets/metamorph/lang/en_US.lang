@@ -178,6 +178,8 @@ metamorph.config.morphs.load_entity_morphs=Load entity morphs
 metamorph.config.comments.morphs.load_entity_morphs=Whether entity morphs should be loaded in creative morph menu
 metamorph.config.morphs.spawn_particles_first_person=Spawn morph particles in first person
 metamorph.config.comments.morphs.spawn_particles_first_person=When enabled, morphed players spawn particles in first person
+metamorph.config.morphs.disable_player_death_sound_fix=Disable player death sound fix
+metamorph.config.comments.morphs.disable_player_death_sound_fix=Disable player death sound fix. The fix may cause some player sounds to seem far away, or may cause sounds to be repeated or missing if other sound-altering mods are installed
 
 # Commands
 metamorph.commands.morph=Morph command. This command is responsible for morphing player into specified morph.\n\n/morph <username> [morph_name] [data_tag]
