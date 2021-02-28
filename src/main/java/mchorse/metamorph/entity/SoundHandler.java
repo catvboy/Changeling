@@ -5,8 +5,11 @@ import mchorse.metamorph.api.morphs.AbstractMorph;
 import mchorse.metamorph.capabilities.morphing.IMorphing;
 import mchorse.metamorph.capabilities.morphing.Morphing;
 import mchorse.metamorph.util.ObfuscatedName;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.SPacketSoundEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -14,6 +17,8 @@ import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Replaces the sounds that players usually make when they are in morphs
@@ -49,7 +54,92 @@ public class SoundHandler
 
         morphing.setLastDamageSource(event.getSource());
     }
+    
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public void fixPlayerDeathSoundServer(PlaySoundAtEntityEvent event)
+    {
+        if (Metamorph.disablePlayerDeathSoundFix.get())
+        {
+            return;
+        }
+        Entity entity = event.getEntity();
+        if (entity == null || entity.world == null)
+        {
+            return;
+        }
+        if (entity.world.isRemote)
+        {
+            return;
+        }
+        
+        if (!(entity instanceof EntityPlayerMP))
+        {
+            return;
+        }
+        EntityPlayerMP player = (EntityPlayerMP)entity;
 
+        SoundEvent sound = event.getSound();
+        if (sound == null) {
+            // Sounds can be null, apparently
+            return;
+        }
+        ResourceLocation soundResource = sound.getRegistryName();
+        if (soundResource == null) {
+            return;
+        }
+        String soundType = soundResource.getResourcePath();
+        
+        if (soundType.endsWith(".hurt") || soundType.endsWith(".death"))
+        {
+            onPlaySound(event);
+            if (!event.isCanceled())
+            {
+                player.connection.sendPacket(new SPacketSoundEffect(event.getSound(), event.getCategory(), player.posX, player.posY, player.posZ, event.getVolume(), event.getPitch()));
+                event.setCanceled(true);
+            }
+        }
+    }
+    
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent(priority=EventPriority.HIGH)
+    public void fixPlayerDeathSoundClient(PlaySoundAtEntityEvent event)
+    {
+        if (Metamorph.disablePlayerDeathSoundFix.get())
+        {
+            return;
+        }
+        Entity entity = event.getEntity();
+        if (entity == null || entity.world == null)
+        {
+            return;
+        }
+        if (!entity.world.isRemote)
+        {
+            return;
+        }
+        
+        if (entity != Minecraft.getMinecraft().player)
+        {
+            return;
+        }
+
+        SoundEvent sound = event.getSound();
+        if (sound == null) {
+            // Sounds can be null, apparently
+            return;
+        }
+        ResourceLocation soundResource = sound.getRegistryName();
+        if (soundResource == null) {
+            return;
+        }
+        String soundType = soundResource.getResourcePath();
+        
+        if (soundType.endsWith(".hurt") || soundType.endsWith(".death"))
+        {
+            event.setCanceled(true);
+        }
+    }
+    
     @SubscribeEvent
     public void onPlaySound(PlaySoundAtEntityEvent event)
     {
