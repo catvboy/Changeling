@@ -1,5 +1,10 @@
 package mchorse.metamorph.client.gui.survival;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.lwjgl.input.Keyboard;
+
 import mchorse.mclib.client.gui.framework.GuiBase;
 import mchorse.mclib.client.gui.framework.elements.GuiElement;
 import mchorse.mclib.client.gui.framework.elements.GuiScrollElement;
@@ -7,7 +12,6 @@ import mchorse.mclib.client.gui.framework.elements.buttons.GuiButtonElement;
 import mchorse.mclib.client.gui.framework.elements.buttons.GuiToggleElement;
 import mchorse.mclib.client.gui.framework.elements.input.GuiKeybindElement;
 import mchorse.mclib.client.gui.framework.elements.utils.GuiDraw;
-import mchorse.mclib.client.gui.utils.Elements;
 import mchorse.mclib.client.gui.utils.GuiUtils;
 import mchorse.mclib.client.gui.utils.keys.IKey;
 import mchorse.metamorph.ClientProxy;
@@ -26,10 +30,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
-
-import java.io.IOException;
-
-import org.lwjgl.input.Keyboard;
 
 /**
  * Survival morph menu GUI
@@ -105,8 +105,11 @@ public class GuiSurvivalScreen extends GuiBase
         EntityPlayer player = Minecraft.getMinecraft().player;
         boolean creative = player.isCreative();
         boolean allowed = Metamorph.allowMorphingIntoCategoryMorphs.get();
+        IMorphing cap = Morphing.get(player);
+        List<AbstractMorph> capAcquiredMorphs = cap == null ? null : cap.getAcquiredMorphs();
 
-        if (this.creative != creative || this.allowed != allowed || creative || this.morphs.sections.isEmpty())
+        if (this.creative != creative || this.allowed != allowed || creative || this.morphs.sections.isEmpty() ||
+                (this.morphs == null || this.morphs.acquired == null || this.morphs.acquired.getMorphs() != capAcquiredMorphs))
         {
             this.creative = creative;
             this.allowed = allowed;
