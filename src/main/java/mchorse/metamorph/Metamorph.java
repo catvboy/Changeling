@@ -80,6 +80,7 @@ public class Metamorph
     public static ValueBoolean allowMorphingIntoCategoryMorphs;
     public static ValueBoolean loadEntityMorphs;
     public static ValueBoolean spawnParticlesFirstPerson;
+    public static ValueBoolean disablePlayerDeathSoundFix;
 
     /* Events */
 
@@ -105,6 +106,7 @@ public class Metamorph
         allowMorphingIntoCategoryMorphs = builder.getBoolean("allow_morphing_into_category_morphs", false);
         loadEntityMorphs = builder.getBoolean("load_entity_morphs", true);
         spawnParticlesFirstPerson = builder.getBoolean("spawn_particles_first_person", false);
+        disablePlayerDeathSoundFix = builder.getBoolean("disable_player_death_sound_fix", false);
 
         event.modules.add(builder.build());
     }
